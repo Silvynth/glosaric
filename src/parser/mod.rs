@@ -1,3 +1,4 @@
+pub mod dart;
 pub mod rust_syn;
 
 use std::path::Path;
@@ -16,5 +17,6 @@ pub trait SourceParser: Send + Sync {
 pub fn default_parsers() -> Vec<Box<dyn SourceParser>> {
     vec![
         Box::new(rust_syn::RustSynParser::new()),
+        Box::new(dart::DartParser::new()),
     ]
 }

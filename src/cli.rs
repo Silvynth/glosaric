@@ -133,7 +133,7 @@ pub fn deduce_project_name(repo_path: &PathBuf, explicit_name: Option<&str>) -> 
         return name.to_string();
     }
 
-    // Intentar leer de Cargo.toml si existe
+    // Intentar leer de Cargo.toml si existe (Rust)
     let cargo_path = repo_path.join("Cargo.toml");
     if cargo_path.exists() {
         if let Ok(content) = std::fs::read_to_string(cargo_path) {
@@ -141,6 +141,24 @@ pub fn deduce_project_name(repo_path: &PathBuf, explicit_name: Option<&str>) -> 
                 let trimmed = line.trim();
                 if trimmed.starts_with("name") {
                     if let Some((_, val)) = trimmed.split_once('=') {
+                        let clean = val.trim().trim_matches('"').trim_matches('\'').trim();
+                        if !clean.is_empty() {
+                            return clean.to_string();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Intentar leer de pubspec.yaml si existe (Flutter / Dart)
+    let pubspec_path = repo_path.join("pubspec.yaml");
+    if pubspec_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(pubspec_path) {
+            for line in content.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with("name:") {
+                    if let Some((_, val)) = trimmed.split_once(':') {
                         let clean = val.trim().trim_matches('"').trim_matches('\'').trim();
                         if !clean.is_empty() {
                             return clean.to_string();
