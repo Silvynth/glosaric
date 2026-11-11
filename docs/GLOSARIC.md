@@ -74,3 +74,7 @@ actualizado: 2026-11-11
 - `DartParser` | Extractor léxico de sintaxis Flutter y Dart | Parsea archivos .dart identificando clases, métodos públicos y comentarios.
 - `new()` | fn() -> Self | Constructor de DartParser con expresiones regulares precompiladas.
 
+### `python.rs`
+- `PythonParser` | Extractor léxico de sintaxis Python | Parsea archivos .py extrayendo clases, funciones y docstrings multilínea.
+- `new()` | fn() -> Self | Constructor de PythonParser con expresiones regulares precompiladas.
+
