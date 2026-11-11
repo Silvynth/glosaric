@@ -1,71 +1,60 @@
 # 📖 Glosaric CLI (`glosaric`)
 
-> **Navegación de código determinista y generador de glosarios duales para desarrolladores e IAs.**  
-> Erradica el escaneo ciego (`grep` masivo), previene el *Context Rot* en agentes cognitivos y reduce hasta un 75% el consumo de tokens en tareas de ingeniería.
+> **Herramienta simple para trackear funciones públicas y tener un mapa rápido de tu código.**  
+> *Nota de honestidad: Este proyecto fue generado y estructurado con asistencia de IA.*
 
 ---
 
-## ⚡ ¿Qué problema resuelve?
+## 💡 ¿Qué es y qué NO es?
 
-Cuando un desarrollador o una IA (Cursor, Copilot, Claude Code, Antigravity) interactúa con un repositorio mediano o grande, suele recurrir a búsquedas ciegas (`grep`, `find`) o a leer decenas de archivos completos. Esto provoca:
-* **Desperdicio masivo de tokens y lentitud.**
-* **Context Rot:** pérdida de foco por saturación de contexto con código irrelevante.
-* **Deuda técnica invisible:** funciones y structs huérfanos que nadie documenta.
-
-**Glosaric** escanea el código en **< 10 milisegundos**, extrae las APIs públicas (`pub fn`, `struct`, `enum`, `type`, `const`) y genera una **hoja única de navegación** en formato Markdown estándar con estructura dual:
-
-```markdown
-- `funcion(params)` | Explicación técnica precisa / tipos | Traducción humana / para qué sirve en la práctica
-```
+* **NO busca reemplazar nada:** No viene a sustituir `cargo doc`, ni JSDoc, ni Doxygen, ni Swagger, ni la documentación oficial profunda de tu proyecto.
+* **Solo hace una cosa sencilla:** Escanea tu código fuente, pesca las funciones públicas (`pub fn`, `def`, métodos de clases), structs y enums, y te los anota en un solo archivo Markdown (`docs/GLOSARIC.md`).
+* **¿Para qué sirve en la práctica?** Para tener un "mapa de ruta" rápido en una sola página. Cuando tú (o una IA como Cursor, Copilot o Claude) necesitan saber qué funciones existen en el proyecto, abren ese archivo con `Ctrl + F` y lo encuentran en 5 segundos en vez de perder tiempo tirando `grep`s a ciegas por 40 carpetas.
 
 ---
 
-## 🚀 Comandos Principales
+## 🌐 Lenguajes que lee actualmente
+Puedes consultar en cualquier momento con `glosaric languages`:
+* 🦀 **Rust** (`.rs`): funciones públicas, structs, enums, tipos.
+* 🎯 **Dart / Flutter** (`.dart`): clases, widgets, métodos públicos y comentarios `//`.
+* 🐍 **Python** (`.py`): clases, funciones y docstrings `"""..."""`.
 
-### 1. Inicializar un Glosario (`glosaric init`)
-Escanea el código fuente recursivamente y genera `docs/GLOSARIC.md`:
+*(Si corres la herramienta en un proyecto con archivos en TypeScript, Go, C++, etc., la herramienta te avisará con honestidad cuántos archivos de esos lenguajes encontró para que sepas que aún no los puede leer).*
+
+---
+
+## 🚀 Uso Rápido
+
+### 1. Generar el mapa inicial
+Te paras en la carpeta de tu proyecto y corres:
 ```bash
 glosaric init .
 ```
-O sincroniza directamente con tu Bóveda Obsidian:
-```bash
-glosaric init . --vault
+Te creará `docs/GLOSARIC.md` agrupado por carpetas con este formato de tres columnas:
+```markdown
+- `funcion(params)` | Firma técnica / tipos | Explicación o comentario
 ```
 
-### 2. Auditar Deuda Técnica en CI/CD (`glosaric check`)
-Compara el código fuente contra el Glosario. Si alguien creó funciones públicas sin documentarlas, falla con código de salida `1`:
-```bash
-glosaric check .
-```
-Ideal para GitHub Actions y pre-commit hooks:
-```yaml
-- name: Audit Glosaric Sync
-  run: glosaric check . --strict
-```
+*(Si usas Obsidian y quieres que te lo guarde directo en tu bóveda, le puedes pasar `--vault`).*
 
-### 3. Sincronización Inteligente No Destructiva (`glosaric sync`)
-Detecta nuevos símbolos en el código y los anexa automáticamente **sin sobreescribir ni borrar tus traducciones humanas existentes**:
+### 2. Buscar algo al vuelo sin abrir editores
+```bash
+glosaric query "login" .
+```
+Busca en milisegundos en el glosario por nombre de función, por tipo o por palabra clave.
+
+### 3. Sincronizar cuando agregas código nuevo
+Si creaste funciones nuevas y quieres agregarlas al glosario **sin que te borre las explicaciones que ya habías escrito**:
 ```bash
 glosaric sync . --backup
 ```
+Agrega lo nuevo al final, te hace una copia de respaldo `.backup.md` por seguridad y no toca lo que ya tenías documentado.
 
-### 4. Búsqueda Relámpago en Terminal (`glosaric query`)
-Localiza cualquier símbolo, tipo o concepto en < 3 milisegundos:
+### 4. Modo chequeo (opcional para pre-commit o CI)
 ```bash
-glosaric query "sync" .
+glosaric check .
 ```
-O en formato JSON estructurado para extensiones o agentes de IA:
-```bash
-glosaric query "sync" . --json
-```
-
----
-
-## 🛡️ Principios de Diseño
-1. **Cero pérdida de datos:** Las descripciones escritas a mano por desarrolladores están blindadas.
-2. **Cero dependencias pesadas:** Binario único nativo en Rust de ~3 MB.
-3. **Multi-idioma e i18n:** Soporte UTF-8 completo para comentarios y descripciones en cualquier idioma.
-4. **Simetría Humano-IA:** Formato Markdown optimizado tanto para lectura humana rápida (`Ctrl + F` < 15s) como para inyección contextual en prompts de LLMs.
+Te avisa si tienes funciones públicas en el código que no has anotado en el glosario.
 
 ---
 
