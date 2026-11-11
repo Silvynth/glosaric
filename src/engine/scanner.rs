@@ -116,6 +116,9 @@ fn is_ignored_dir(path: &Path) -> bool {
                 | ".cache"
                 | ".idea"
                 | ".vscode"
+                | ".venv"
+                | "venv"
+                | "__pycache__"
         )
     } else {
         false

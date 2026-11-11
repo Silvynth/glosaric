@@ -1,4 +1,5 @@
 pub mod dart;
+pub mod python;
 pub mod rust_syn;
 
 use std::path::Path;
@@ -18,5 +19,6 @@ pub fn default_parsers() -> Vec<Box<dyn SourceParser>> {
     vec![
         Box::new(rust_syn::RustSynParser::new()),
         Box::new(dart::DartParser::new()),
+        Box::new(python::PythonParser::new()),
     ]
 }
