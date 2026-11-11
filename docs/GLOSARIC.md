@@ -51,6 +51,7 @@ actualizado: 2026-11-11
 - `CodeScanner` | Escáner recursivo del filesystem con filtro de exclusión | Recorre el árbol de código ignorando target, .git y node_modules.
 - `new()` | fn() -> Self | Constructor de CodeScanner inicializado con los parsers activos.
 - `scan_project(repo_root)` | fn(&self, & Path) -> Result < Vec < ModuleSection > > | Escanea recursivamente el proyecto y organiza los símbolos por módulo y archivo.
+- `ScanResult` | Struct con módulos escaneados y conteo de lenguajes no soportados | Retorna el árbol de código analizado y las extensiones detectadas para advertencias al usuario.
 
 ## 📂 `src/format/` (Serialización y Deserialización Markdown Canónico)
 
