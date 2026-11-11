@@ -1,62 +1,61 @@
-# 📖 Glosaric CLI (`glosaric`)
+# glosaric
 
-> **Herramienta simple para trackear funciones públicas y tener un mapa rápido de tu código.**  
-> *Nota de honestidad: Este proyecto fue generado y estructurado con asistencia de IA.*
+Herramienta chiquita en Rust para trackear funciones públicas en un archivo Markdown (`docs/GLOSARIC.md`).
+Útil para tener un mapa rápido de tu código y no perder tiempo haciendo `grep` a ciegas (para ti o para una IA).
 
----
-
-## 💡 ¿Qué es y qué NO es?
-
-* **NO busca reemplazar nada:** No viene a sustituir `cargo doc`, ni JSDoc, ni Doxygen, ni Swagger, ni la documentación oficial profunda de tu proyecto.
-* **Solo hace una cosa sencilla:** Escanea tu código fuente, pesca las funciones públicas (`pub fn`, `def`, métodos de clases), structs y enums, y te los anota en un solo archivo Markdown (`docs/GLOSARIC.md`).
-* **¿Para qué sirve en la práctica?** Para tener un "mapa de ruta" rápido en una sola página. Cuando tú (o una IA como Cursor, Copilot o Claude) necesitan saber qué funciones existen en el proyecto, abren ese archivo con `Ctrl + F` y lo encuentran en 5 segundos en vez de perder tiempo tirando `grep`s a ciegas por 40 carpetas.
+> *Proyecto generado con asistencia de IA. No busca reemplazar herramientas oficiales de documentación ni nada por el estilo; solo extrae funciones y structs en una lista simple.*
 
 ---
 
-## 🌐 Lenguajes que lee actualmente
-Puedes consultar en cualquier momento con `glosaric languages`:
-* 🦀 **Rust** (`.rs`): funciones públicas, structs, enums, tipos.
-* 🎯 **Dart / Flutter** (`.dart`): clases, widgets, métodos públicos y comentarios `//`.
-* 🐍 **Python** (`.py`): clases, funciones y docstrings `"""..."""`.
+## 📦 Instalación
 
-*(Si corres la herramienta en un proyecto con archivos en TypeScript, Go, C++, etc., la herramienta te avisará con honestidad cuántos archivos de esos lenguajes encontró para que sepas que aún no los puede leer).*
+Requiere tener Rust instalado:
+
+```bash
+git clone https://github.com/tu-usuario/glosaric.git
+cd glosaric
+cargo install --path .
+```
+*(El ejecutable queda instalado en `~/.cargo/bin/glosaric`)*.
 
 ---
 
-## 🚀 Uso Rápido
+## ⚡ Cómo se usa
 
-### 1. Generar el mapa inicial
-Te paras en la carpeta de tu proyecto y corres:
+Te paras en la carpeta de tu proyecto:
+
+### 1. Crear el glosario
 ```bash
 glosaric init .
 ```
-Te creará `docs/GLOSARIC.md` agrupado por carpetas con este formato de tres columnas:
-```markdown
-- `funcion(params)` | Firma técnica / tipos | Explicación o comentario
-```
+Lee tu código y te genera `docs/GLOSARIC.md` con las funciones encontradas.
 
-*(Si usas Obsidian y quieres que te lo guarde directo en tu bóveda, le puedes pasar `--vault`).*
-
-### 2. Buscar algo al vuelo sin abrir editores
+### 2. Buscar una función al vuelo
 ```bash
 glosaric query "login" .
 ```
-Busca en milisegundos en el glosario por nombre de función, por tipo o por palabra clave.
 
-### 3. Sincronizar cuando agregas código nuevo
-Si creaste funciones nuevas y quieres agregarlas al glosario **sin que te borre las explicaciones que ya habías escrito**:
+### 3. Actualizar cuando agregas código nuevo
 ```bash
 glosaric sync . --backup
 ```
-Agrega lo nuevo al final, te hace una copia de respaldo `.backup.md` por seguridad y no toca lo que ya tenías documentado.
+Agrega las funciones nuevas sin tocar ni borrar lo que ya habías explicado a mano.
 
-### 4. Modo chequeo (opcional para pre-commit o CI)
+---
+
+## 🌐 Lenguajes que lee
+
+Puedes verlos con:
 ```bash
-glosaric check .
+glosaric languages
 ```
-Te avisa si tienes funciones públicas en el código que no has anotado en el glosario.
+* **Rust** (`.rs`)
+* **Dart / Flutter** (`.dart`)
+* **Python** (`.py`)
+
+*(Si tienes archivos en TypeScript, Go, etc., el programa te avisa que aún no tiene parser para ellos).*
 
 ---
 
 ## 📄 Licencia
-MIT / Apache 2.0
+MIT
