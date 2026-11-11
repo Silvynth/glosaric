@@ -11,62 +11,61 @@ actualizado: 2026-11-11
 
 ---
 
-## 📂 `src/`
+## 📂 `src/` (Punto de Entrada, CLI y Modelo de Dominio)
 
 ### `cli.rs`
-- `Cli` | Struct Cli | [Pendiente de documentar]
-- `Commands` | Enum de 4 variantes | [Pendiente de documentar]
-- `resolve_glosaric_path(repo_path, explicit_doc, vault_opt, project_name)` | fn(& PathBuf, Option < & PathBuf >, Option < & Option < PathBuf > >, & str) -> PathBuf | Resuelve la ruta canónica del archivo Glosaric según los argumentos de la CLI
-- `deduce_project_name(repo_path, explicit_name)` | fn(& PathBuf, Option < & str >) -> String | Extrae o deduce el nombre del proyecto a partir de la ruta o Cargo.toml
+- `Cli` | Parser raíz de argumentos Clap | Estructura principal que recibe y enruta los comandos de terminal.
+- `Commands` | Enum con 4 subcomandos (Init, Check, Sync, Query) | Define las operaciones fundamentales soportadas por la herramienta.
+- `resolve_glosaric_path(repo_path, explicit_doc, vault_opt, project_name)` | fn(& PathBuf, Option < & PathBuf >, Option < & Option < PathBuf > >, & str) -> PathBuf | Resuelve la ruta canónica a docs/GLOSARIC.md o la Bóveda Obsidian según los flags.
+- `deduce_project_name(repo_path, explicit_name)` | fn(& PathBuf, Option < & str >) -> String | Extrae el nombre formal del proyecto desde Cargo.toml o el directorio raíz.
 
 ### `model.rs`
-- `SymbolKind` | Enum de 8 variantes | [Pendiente de documentar]
-- `SymbolEntry` | Struct SymbolEntry | [Pendiente de documentar]
-- `to_markdown_line()` | fn(&self) -> String | Formatea la línea al estándar canónico: `- `simbolo(params)` | Explicación técnica precisa | Traducción humana`
-- `clean_name()` | fn(&self) -> String | Nombre limpio sin comillas ni paréntesis para comparaciones
-- `FileSection` | Struct FileSection | [Pendiente de documentar]
-- `ModuleSection` | Struct ModuleSection | [Pendiente de documentar]
-- `GlosaricDoc` | Struct GlosaricDoc | [Pendiente de documentar]
-- `new(project_name)` | fn(& str) -> Self | [Pendiente de documentar]
-- `total_symbols()` | fn(&self) -> usize | Cuenta total de símbolos registrados en todo el documento
-- `find_symbol(clean_name, file_path)` | fn(&self, & str, & str) -> Option < & SymbolEntry > | Busca un símbolo existente por nombre limpio y archivo
+- `SymbolKind` | Enum de 8 categorías sintácticas (Fn, Struct, Enum, Trait, etc.) | Clasifica qué elemento de código representa cada fila documentada.
+- `SymbolEntry` | Struct atómico con nombre, tipos, docstrings y traducción humana | Almacena una entrada individual completa del glosario en memoria.
+- `to_markdown_line()` | fn(&self) -> String | Formatea el símbolo al estándar canónico de tres columnas separadas por barritas.
+- `clean_name()` | fn(&self) -> String | Extrae el nombre puro sin comillas ni paréntesis para cotejar duplicados y cambios.
+- `FileSection` | Contenedor de símbolos agrupados por archivo de origen | Representa una subsección `### `archivo.rs`` en el documento.
+- `ModuleSection` | Contenedor de archivos agrupados por directorio relativo | Representa un encabezado de módulo `## 📂 `src/modulo/``.
+- `GlosaricDoc` | Documento raíz en memoria con frontmatter, misión y módulos | Estructura central que se lee, audita, sincroniza y guarda en disco.
+- `new(project_name)` | fn(& str) -> Self | Constructor que inicializa un GlosaricDoc nuevo con metadatos y fecha actual.
+- `total_symbols()` | fn(&self) -> usize | Conteo acumulado de todos los símbolos registrados en el documento.
+- `find_symbol(clean_name, file_path)` | fn(&self, & str, & str) -> Option < & SymbolEntry > | Búsqueda por archivo y fallback global por nombre para no sobreescribir traducciones.
 
-## 📂 `src/engine/`
+## 📂 `src/engine/` (Motores de Escaneo, Fusión No Destructiva, Auditoría y Búsqueda)
 
 ### `auditor.rs`
-- `AuditReport` | Struct AuditReport | [Pendiente de documentar]
-- `is_clean()` | fn(&self) -> bool | [Pendiente de documentar]
-- `audit_project(scanned_modules, glosaric_path, project_name)` | fn(& [ModuleSection], & Path, & str) -> Result < AuditReport > | [Pendiente de documentar]
+- `AuditReport` | Struct con listas de huérfanos, obsoletos y pendientes | Entrega el diagnóstico detallado de deuda técnica para CI/CD y pre-commit.
+- `is_clean()` | fn(&self) -> bool | Evalúa si el código fuente está 100% cubierto por el Glosario sin omisiones.
+- `audit_project(scanned_modules, glosaric_path, project_name)` | fn(& [ModuleSection], & Path, & str) -> Result < AuditReport > | Compara el AST del código contra el Glosario y reporta discrepancias.
 
 ### `merger.rs`
-- `MergeOptions` | Struct MergeOptions | [Pendiente de documentar]
-- `MergeResult` | Struct MergeResult | [Pendiente de documentar]
-- `sync_and_save(scanned_modules, target_path, options)` | fn(Vec < ModuleSection >, & Path, MergeOptions) -> Result < MergeResult > | [Pendiente de documentar]
+- `MergeOptions` | Struct de configuración con flags de respaldo y nombre | Parámetros que controlan la sincronización y la política de backup.
+- `MergeResult` | Struct con estadísticas de sincronización (totales, nuevos, preservados) | Informa al usuario qué cambios se aplicaron tras el proceso de merge.
+- `sync_and_save(scanned_modules, target_path, options)` | fn(Vec < ModuleSection >, & Path, MergeOptions) -> Result < MergeResult > | Fusión inteligente no destructiva que anexa símbolos nuevos preservando traducciones.
 
 ### `query.rs`
-- `QueryResult` | Struct QueryResult | [Pendiente de documentar]
-- `search_glosaric(glosaric_path, term, project_name)` | fn(& Path, & str, & str) -> Result < QueryResult > | [Pendiente de documentar]
+- `QueryResult` | Struct serializable con término buscado y coincidencias | Almacena los resultados de búsqueda para salida en terminal o JSON para IAs.
+- `search_glosaric(glosaric_path, term, project_name)` | fn(& Path, & str, & str) -> Result < QueryResult > | Localiza símbolos por nombre, firma o traducción humana en menos de 3 ms.
 
 ### `scanner.rs`
-- `CodeScanner` | Struct CodeScanner | [Pendiente de documentar]
-- `new()` | fn() -> Self | [Pendiente de documentar]
-- `scan_project(repo_root)` | fn(&self, & Path) -> Result < Vec < ModuleSection > > | Escanea recursivamente el proyecto y organiza los símbolos por módulo y archivo
+- `CodeScanner` | Escáner recursivo del filesystem con filtro de exclusión | Recorre el árbol de código ignorando target, .git y node_modules.
+- `new()` | fn() -> Self | Constructor de CodeScanner inicializado con los parsers activos.
+- `scan_project(repo_root)` | fn(&self, & Path) -> Result < Vec < ModuleSection > > | Escanea recursivamente el proyecto y organiza los símbolos por módulo y archivo.
 
-## 📂 `src/format/`
+## 📂 `src/format/` (Serialización y Deserialización Markdown Canónico)
 
 ### `markdown_parser.rs`
-- `parse_markdown(content, default_project_name)` | fn(& str, & str) -> Result < GlosaricDoc > | [Pendiente de documentar]
+- `parse_markdown(content, default_project_name)` | fn(& str, & str) -> Result < GlosaricDoc > | Parsea un archivo Glosaric existente respetando descripciones previas y subtítulos.
 
 ### `markdown_writer.rs`
-- `render_markdown(doc)` | fn(& GlosaricDoc) -> String | [Pendiente de documentar]
+- `render_markdown(doc)` | fn(& GlosaricDoc) -> String | Serializa un GlosaricDoc a texto Markdown estándar canónico con frontmatter.
 
-## 📂 `src/parser/`
+## 📂 `src/parser/` (Extractores Sintácticos AST Multi-Lenguaje)
 
 ### `mod.rs`
-- `SourceParser` | Trait SourceParser | [Pendiente de documentar]
-- `default_parsers()` | fn() -> Vec < Box < dyn SourceParser > > | Obtiene todos los parsers disponibles en el sistema
+- `SourceParser` | Trait abstracto para extractores de sintaxis de código | Interfaz común para soportar Rust, Dart, TypeScript, Python, etc.
+- `default_parsers()` | fn() -> Vec < Box < dyn SourceParser > > | Fábrica de parsers activos disponibles en el binario.
 
 ### `rust_syn.rs`
-- `RustSynParser` | Struct RustSynParser | [Pendiente de documentar]
-- `new()` | fn() -> Self | [Pendiente de documentar]
-
+- `RustSynParser` | Extractor de sintaxis Rust basado en syn y quote | Parsea archivos .rs extrayendo visibilidades públicas y docstrings.
+- `new()` | fn() -> Self | Constructor de RustSynParser.
