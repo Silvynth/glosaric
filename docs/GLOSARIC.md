@@ -69,3 +69,8 @@ actualizado: 2026-11-11
 ### `rust_syn.rs`
 - `RustSynParser` | Extractor de sintaxis Rust basado en syn y quote | Parsea archivos .rs extrayendo visibilidades públicas y docstrings.
 - `new()` | fn() -> Self | Constructor de RustSynParser.
+
+### `dart.rs`
+- `DartParser` | Extractor léxico de sintaxis Flutter y Dart | Parsea archivos .dart identificando clases, métodos públicos y comentarios.
+- `new()` | fn() -> Self | Constructor de DartParser con expresiones regulares precompiladas.
+
