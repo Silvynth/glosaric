@@ -39,7 +39,8 @@ fn main() -> Result<()> {
                 project_name.green().bold()
             );
 
-            let scanned_modules = scanner.scan_project(&path)?;
+            let scan_res = scanner.scan_project(&path)?;
+            let scanned_modules = scan_res.modules;
 
             let merge_opts = MergeOptions {
                 make_backup: backup,
@@ -64,6 +65,23 @@ fn main() -> Result<()> {
             if let Some(bak) = res.backup_created {
                 println!("   💾 Copia de seguridad guardada en: {}", bak.dimmed());
             }
+
+            // Advertencia pedagógica si se detectaron lenguajes aún no soportados
+            if !scan_res.unsupported_languages.is_empty() {
+                println!(
+                    "\n{} Se detectaron archivos en lenguajes aún no soportados en este proyecto:",
+                    "ℹ️  [Aviso]".yellow().bold()
+                );
+                for (lang, count) in &scan_res.unsupported_languages {
+                    println!("   {} {} ({} archivos)", "-".yellow(), lang, count.to_string().cyan());
+                }
+                println!(
+                    "   💡 Lenguajes soportados actualmente: {} | {} | {}",
+                    "Rust (.rs)".green(),
+                    "Dart / Flutter (.dart)".green(),
+                    "Python (.py)".green()
+                );
+            }
         }
 
         Commands::Sync {
@@ -83,7 +101,8 @@ fn main() -> Result<()> {
                 target_path.display().to_string().cyan()
             );
 
-            let scanned_modules = scanner.scan_project(&path)?;
+            let scan_res = scanner.scan_project(&path)?;
+            let scanned_modules = scan_res.modules;
             let merge_opts = MergeOptions {
                 make_backup: backup,
                 project_name,
@@ -106,6 +125,16 @@ fn main() -> Result<()> {
             if let Some(bak) = res.backup_created {
                 println!("   💾 Backup creado: {}", bak.dimmed());
             }
+
+            if !scan_res.unsupported_languages.is_empty() {
+                println!(
+                    "\n{} Se detectaron archivos en lenguajes aún no soportados en este proyecto:",
+                    "ℹ️  [Aviso]".yellow().bold()
+                );
+                for (lang, count) in &scan_res.unsupported_languages {
+                    println!("   {} {} ({} archivos)", "-".yellow(), lang, count.to_string().cyan());
+                }
+            }
         }
 
         Commands::Check {
@@ -118,7 +147,8 @@ fn main() -> Result<()> {
             let project_name = deduce_project_name(&path, None);
             let target_path = resolve_glosaric_path(&path, doc.as_ref(), vault.as_ref(), &project_name);
 
-            let scanned_modules = scanner.scan_project(&path)?;
+            let scan_res = scanner.scan_project(&path)?;
+            let scanned_modules = scan_res.modules;
             let report = audit_project(&scanned_modules, &target_path, &project_name)?;
 
             if json {
@@ -225,6 +255,17 @@ fn main() -> Result<()> {
                     println!("{}", item.to_markdown_line());
                 }
             }
+        }
+
+        Commands::Languages => {
+            println!("{}", "🌐 Lenguajes soportados activamente por glosaric:".cyan().bold());
+            println!("   {} 🦀 Rust (.rs)           - Extracción AST completa con syn (pub fn, struct, enum, docstrings)", "✓".green().bold());
+            println!("   {} 🎯 Dart / Flutter (.dart) - Extracción de clases, widgets, métodos públicos y comentarios //", "✓".green().bold());
+            println!("   {} 🐍 Python (.py)          - Extracción de clases, funciones y docstrings multilínea \"\"\"", "✓".green().bold());
+            println!("\n{}", "🚀 Próximamente (Roadmap v0.2 / v0.3):".dimmed());
+            println!("   - TypeScript (.ts, .tsx) & JavaScript (.js, .jsx)");
+            println!("   - Go (.go)");
+            println!("   - C / C++ (.c, .cpp, .h)");
         }
     }
 

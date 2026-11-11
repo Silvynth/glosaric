@@ -100,6 +100,9 @@ pub enum Commands {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+
+    /// Lista los lenguajes de programación soportados activamente por glosaric
+    Languages,
 }
 
 /// Resuelve la ruta canónica del archivo Glosaric según los argumentos de la CLI

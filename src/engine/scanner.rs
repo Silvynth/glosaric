@@ -6,6 +6,11 @@ use walkdir::WalkDir;
 use crate::model::{FileSection, ModuleSection, SymbolEntry};
 use crate::parser::{default_parsers, SourceParser};
 
+pub struct ScanResult {
+    pub modules: Vec<ModuleSection>,
+    pub unsupported_languages: BTreeMap<String, usize>,
+}
+
 pub struct CodeScanner {
     parsers: Vec<Box<dyn SourceParser>>,
 }
@@ -17,9 +22,11 @@ impl CodeScanner {
         }
     }
 
-    /// Escanea recursivamente el proyecto y organiza los símbolos por módulo y archivo
-    pub fn scan_project(&self, repo_root: &Path) -> Result<Vec<ModuleSection>> {
+    /// Escanea recursivamente el proyecto y organiza los símbolos por módulo y archivo,
+    /// reportando también los lenguajes de código detectados que aún no tienen parser activo.
+    pub fn scan_project(&self, repo_root: &Path) -> Result<ScanResult> {
         let mut module_map: BTreeMap<String, BTreeMap<String, Vec<SymbolEntry>>> = BTreeMap::new();
+        let mut unsupported_counts: BTreeMap<String, usize> = BTreeMap::new();
 
         let walker = WalkDir::new(repo_root)
             .into_iter()
@@ -36,9 +43,11 @@ impl CodeScanner {
                 continue;
             }
 
-            // Buscar un parser adecuado
+            // Verificar si algún parser lo maneja
+            let mut handled = false;
             for parser in &self.parsers {
                 if parser.can_parse(path) {
+                    handled = true;
                     if let Ok(symbols) = parser.parse_file(path, repo_root) {
                         if !symbols.is_empty() {
                             let rel_path = path.strip_prefix(repo_root).unwrap_or(path);
@@ -73,6 +82,15 @@ impl CodeScanner {
                     break;
                 }
             }
+
+            // Si no fue manejado, revisar si es un lenguaje de programación conocido
+            if !handled {
+                if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+                    if let Some(lang_name) = classify_unsupported_extension(ext) {
+                        *unsupported_counts.entry(lang_name.to_string()).or_insert(0) += 1;
+                    }
+                }
+            }
         }
 
         let mut modules = Vec::new();
@@ -93,13 +111,36 @@ impl CodeScanner {
             });
         }
 
-        Ok(modules)
+        Ok(ScanResult {
+            modules,
+            unsupported_languages: unsupported_counts,
+        })
     }
 }
 
 impl Default for CodeScanner {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+fn classify_unsupported_extension(ext: &str) -> Option<&'static str> {
+    match ext.to_lowercase().as_str() {
+        "ts" | "tsx" => Some("TypeScript (.ts, .tsx)"),
+        "js" | "jsx" | "mjs" => Some("JavaScript (.js, .jsx)"),
+        "go" => Some("Go (.go)"),
+        "java" => Some("Java (.java)"),
+        "kt" | "kts" => Some("Kotlin (.kt)"),
+        "c" | "h" => Some("C (.c, .h)"),
+        "cpp" | "cc" | "cxx" | "hpp" => Some("C++ (.cpp, .hpp)"),
+        "cs" => Some("C# (.cs)"),
+        "rb" => Some("Ruby (.rb)"),
+        "php" => Some("PHP (.php)"),
+        "swift" => Some("Swift (.swift)"),
+        "scala" => Some("Scala (.scala)"),
+        "lua" => Some("Lua (.lua)"),
+        "zig" => Some("Zig (.zig)"),
+        _ => None,
     }
 }
 
