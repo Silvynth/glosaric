@@ -76,12 +76,15 @@ fn main() -> Result<()> {
                     println!("   {} {} ({} archivos)", "-".yellow(), lang, count.to_string().cyan());
                 }
                 println!(
-                    "   💡 Lenguajes soportados actualmente: {} | {} | {} | {} | {}",
+                    "   💡 Lenguajes soportados actualmente: {} | {} | {} | {} | {} | {} | {} | {}",
                     "Rust (.rs)".green(),
                     "Dart (.dart)".green(),
                     "Python (.py)".green(),
                     "TypeScript / JS (.ts, .js)".green(),
-                    "Go (.go)".green()
+                    "Go (.go)".green(),
+                    "C / C++ (.c, .h, .cpp)".green(),
+                    "Kotlin (.kt)".green(),
+                    "Swift (.swift)".green()
                 );
             }
         }
@@ -267,9 +270,13 @@ fn main() -> Result<()> {
             println!("   {} 🔷 TypeScript (.ts, .tsx)   - Extracción de funciones, interfaces, clases, types, enums y JSDoc", "✓".green().bold());
             println!("   {} 🟨 JavaScript (.js, .jsx)   - Extracción de funciones exportadas, arrow fns y clases", "✓".green().bold());
             println!("   {} 🐹 Go (.go)                - Extracción de funciones, métodos, structs e interfaces exportadas", "✓".green().bold());
+            println!("   {} ⚡ C / C++ (.c, .h, .cpp)   - Extracción de funciones públicas, structs, enums y macros #define", "✓".green().bold());
+            println!("   {} 📱 Kotlin (.kt, .kts)       - Extracción de clases, interfaces, data classes, fun y KDoc", "✓".green().bold());
+            println!("   {} 🍎 Swift (.swift)          - Extracción de clases, structs, protocols, enums y docstrings ///", "✓".green().bold());
             println!("\n{}", "🚀 Próximamente (Roadmap v0.2 / v0.3):".dimmed());
-            println!("   - C / C++ (.c, .cpp, .h)");
             println!("   - Slint UI (.slint)");
+            println!("   - C# (.cs)");
+            println!("   - Java (.java)");
         }
     }
 

@@ -1,7 +1,10 @@
+pub mod c_cpp;
 pub mod dart;
 pub mod go;
+pub mod kotlin;
 pub mod python;
 pub mod rust_syn;
+pub mod swift;
 pub mod typescript;
 
 use std::path::Path;
@@ -24,5 +27,8 @@ pub fn default_parsers() -> Vec<Box<dyn SourceParser>> {
         Box::new(python::PythonParser::new()),
         Box::new(typescript::TypeScriptParser::new()),
         Box::new(go::GoParser::new()),
+        Box::new(c_cpp::CCppParser::new()),
+        Box::new(kotlin::KotlinParser::new()),
+        Box::new(swift::SwiftParser::new()),
     ]
 }

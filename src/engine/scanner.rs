@@ -126,20 +126,14 @@ impl Default for CodeScanner {
 
 fn classify_unsupported_extension(ext: &str) -> Option<&'static str> {
     match ext.to_lowercase().as_str() {
-        "ts" | "tsx" => Some("TypeScript (.ts, .tsx)"),
-        "js" | "jsx" | "mjs" => Some("JavaScript (.js, .jsx)"),
-        "go" => Some("Go (.go)"),
         "java" => Some("Java (.java)"),
-        "kt" | "kts" => Some("Kotlin (.kt)"),
-        "c" | "h" => Some("C (.c, .h)"),
-        "cpp" | "cc" | "cxx" | "hpp" => Some("C++ (.cpp, .hpp)"),
         "cs" => Some("C# (.cs)"),
         "rb" => Some("Ruby (.rb)"),
         "php" => Some("PHP (.php)"),
-        "swift" => Some("Swift (.swift)"),
         "scala" => Some("Scala (.scala)"),
         "lua" => Some("Lua (.lua)"),
         "zig" => Some("Zig (.zig)"),
+        "slint" => Some("Slint (.slint)"),
         _ => None,
     }
 }
