@@ -76,10 +76,12 @@ fn main() -> Result<()> {
                     println!("   {} {} ({} archivos)", "-".yellow(), lang, count.to_string().cyan());
                 }
                 println!(
-                    "   💡 Lenguajes soportados actualmente: {} | {} | {}",
+                    "   💡 Lenguajes soportados actualmente: {} | {} | {} | {} | {}",
                     "Rust (.rs)".green(),
-                    "Dart / Flutter (.dart)".green(),
-                    "Python (.py)".green()
+                    "Dart (.dart)".green(),
+                    "Python (.py)".green(),
+                    "TypeScript / JS (.ts, .js)".green(),
+                    "Go (.go)".green()
                 );
             }
         }
@@ -259,13 +261,15 @@ fn main() -> Result<()> {
 
         Commands::Languages => {
             println!("{}", "🌐 Lenguajes soportados activamente por glosaric:".cyan().bold());
-            println!("   {} 🦀 Rust (.rs)           - Extracción AST completa con syn (pub fn, struct, enum, docstrings)", "✓".green().bold());
-            println!("   {} 🎯 Dart / Flutter (.dart) - Extracción de clases, widgets, métodos públicos y comentarios //", "✓".green().bold());
-            println!("   {} 🐍 Python (.py)          - Extracción de clases, funciones y docstrings multilínea \"\"\"", "✓".green().bold());
+            println!("   {} 🦀 Rust (.rs)             - Extracción AST completa con syn (pub fn, struct, enum, docstrings)", "✓".green().bold());
+            println!("   {} 🎯 Dart / Flutter (.dart)   - Extracción de clases, widgets, métodos públicos y comentarios //", "✓".green().bold());
+            println!("   {} 🐍 Python (.py)            - Extracción de clases, funciones y docstrings multilínea \"\"\"", "✓".green().bold());
+            println!("   {} 🔷 TypeScript (.ts, .tsx)   - Extracción de funciones, interfaces, clases, types, enums y JSDoc", "✓".green().bold());
+            println!("   {} 🟨 JavaScript (.js, .jsx)   - Extracción de funciones exportadas, arrow fns y clases", "✓".green().bold());
+            println!("   {} 🐹 Go (.go)                - Extracción de funciones, métodos, structs e interfaces exportadas", "✓".green().bold());
             println!("\n{}", "🚀 Próximamente (Roadmap v0.2 / v0.3):".dimmed());
-            println!("   - TypeScript (.ts, .tsx) & JavaScript (.js, .jsx)");
-            println!("   - Go (.go)");
             println!("   - C / C++ (.c, .cpp, .h)");
+            println!("   - Slint UI (.slint)");
         }
     }
 
