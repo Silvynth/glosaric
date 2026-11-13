@@ -1,6 +1,8 @@
 pub mod dart;
+pub mod go;
 pub mod python;
 pub mod rust_syn;
+pub mod typescript;
 
 use std::path::Path;
 use anyhow::Result;
@@ -20,5 +22,7 @@ pub fn default_parsers() -> Vec<Box<dyn SourceParser>> {
         Box::new(rust_syn::RustSynParser::new()),
         Box::new(dart::DartParser::new()),
         Box::new(python::PythonParser::new()),
+        Box::new(typescript::TypeScriptParser::new()),
+        Box::new(go::GoParser::new()),
     ]
 }
