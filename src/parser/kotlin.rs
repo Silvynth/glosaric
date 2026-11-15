@@ -12,19 +12,20 @@ pub struct KotlinParser {
     interface_re: Regex,
     object_re: Regex,
     enum_re: Regex,
+    typealias_re: Regex,
 }
 
 impl KotlinParser {
     pub fn new() -> Self {
         Self {
-            // [suspend] [override] fun [ <T> ] nombre(params) [: Retorno]
+            // [suspend] [override] fun [ <T> ] [Receptor.]nombre(params) [: Retorno]
             fn_re: Regex::new(
-                r"^\s*(?:(?:public|open|override|suspend|inline|tailrec|operator|infix)\s+)*fun\s+(?:<[^>]+>\s+)?([A-Za-z0-9_]+)\s*\((.*?)\)(?:\s*:\s*([^;{=]+))?"
+                r"^\s*(?:(?:public|open|override|suspend|inline|tailrec|operator|infix)\s+)*fun\s+(?:<[^>]+>\s+)?([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)?)\s*\((.*?)\)(?:\s*:\s*([^;{=]+))?"
             ).unwrap(),
 
-            // [data|sealed|open|abstract] class Nombre [ <T> ] [ (constructor) ] [: Base]
+            // [data|sealed|open|abstract|value|annotation] class Nombre [ <T> ] [ (constructor) ] [: Base]
             class_re: Regex::new(
-                r"^\s*(?:(?:public|open|data|sealed|abstract|inner)\s+)*class\s+([A-Za-z0-9_]+)(?:\s*<[^>]+>)?(?:\s*\([^)]*\))?(?:\s*:\s*([A-Za-z0-9_<>, ()]+))?"
+                r"^\s*(?:(?:public|open|data|sealed|abstract|inner|value|annotation)\s+)*class\s+([A-Za-z0-9_]+)(?:\s*<[^>]+>)?(?:\s*\([^)]*\))?(?:\s*:\s*([A-Za-z0-9_<>, ()]+))?"
             ).unwrap(),
 
             // [sealed] interface Nombre [ <T> ] [: Base]
@@ -32,14 +33,19 @@ impl KotlinParser {
                 r"^\s*(?:(?:public|sealed|fun)\s+)*interface\s+([A-Za-z0-9_]+)(?:\s*<[^>]+>)?(?:\s*:\s*([A-Za-z0-9_<>, ()]+))?"
             ).unwrap(),
 
-            // [data] object Nombre [: Base]
+            // [data] [companion] object [Nombre] [: Base]
             object_re: Regex::new(
-                r"^\s*(?:(?:public|data)\s+)*object\s+([A-Za-z0-9_]+)"
+                r"^\s*(?:(?:public|data)\s+)*(?:companion\s+)?object(?:\s+([A-Za-z0-9_]+))?"
             ).unwrap(),
 
             // enum class Nombre
             enum_re: Regex::new(
                 r"^\s*(?:public\s+)?enum\s+class\s+([A-Za-z0-9_]+)"
+            ).unwrap(),
+
+            // typealias Nombre = Destino
+            typealias_re: Regex::new(
+                r"^\s*(?:public\s+)?typealias\s+([A-Za-z0-9_]+)(?:\s*<[^>]+>)?\s*=\s*([^;{\n]+)"
             ).unwrap(),
         }
     }
@@ -177,14 +183,42 @@ impl KotlinParser {
                 continue;
             }
 
-            // 4. Objects
+            // 4. Objects (y companion objects)
             if let Some(caps) = self.object_re.captures(trimmed) {
+                let raw_name = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                let name = if raw_name.is_empty() {
+                    if trimmed.contains("companion object") {
+                        "Companion"
+                    } else {
+                        raw_name
+                    }
+                } else {
+                    raw_name
+                };
+
+                if !name.is_empty() {
+                    symbols.push(SymbolEntry {
+                        name: name.to_string(),
+                        kind: SymbolKind::Struct,
+                        file_path: relative_path.to_string(),
+                        signature_tech: format!("object {name}"),
+                        human_desc: None,
+                        doc_comment: doc,
+                    });
+                    doc_buffer.clear();
+                    continue;
+                }
+            }
+
+            // 5. Typealiases
+            if let Some(caps) = self.typealias_re.captures(trimmed) {
                 let name = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                let target = caps.get(2).map(|m| m.as_str().trim()).unwrap_or("");
                 symbols.push(SymbolEntry {
                     name: name.to_string(),
-                    kind: SymbolKind::Struct,
+                    kind: SymbolKind::TypeAlias,
                     file_path: relative_path.to_string(),
-                    signature_tech: format!("object {name}"),
+                    signature_tech: format!("typealias {name} = {target}"),
                     human_desc: None,
                     doc_comment: doc,
                 });
@@ -192,7 +226,7 @@ impl KotlinParser {
                 continue;
             }
 
-            // 5. Funciones
+            // 6. Funciones
             if let Some(caps) = self.fn_re.captures(trimmed) {
                 let fn_name = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                 let params = caps.get(2).map(|m| m.as_str().trim()).unwrap_or("");
@@ -326,5 +360,117 @@ private fun internalSecurityCheck() {}
         assert_eq!(symbols[8].name, "querySdkVersion()");
         assert_eq!(symbols[8].kind, SymbolKind::Function);
         assert_eq!(symbols[8].doc_comment.as_deref(), Some("Consulta la versión nativa del SDK de Android."));
+    }
+
+    #[test]
+    fn test_kotlin_parser_advanced_features() {
+        let parser = KotlinParser::new();
+        let code = r#"
+package com.licarayen.connect.telemetry
+
+/**
+ * Alias de tipo para despacho reactivo de telemetría.
+ */
+typealias TelemetryCallback = (String, Map<String, Any>) -> Unit
+
+/**
+ * Identificador opaco de sesión nativa.
+ */
+value class SessionToken(val raw: String)
+
+sealed class OrbitalEvent {
+    data class IgnitionStarted(val epoch: Long) : OrbitalEvent()
+    object ShutdownCompleted : OrbitalEvent()
+}
+
+class TelemetryDispatcher {
+    companion object Factory {
+        fun createDefault(): TelemetryDispatcher {
+            return TelemetryDispatcher()
+        }
+    }
+
+    fun dispatch(event: OrbitalEvent) {}
+}
+
+/**
+ * Normaliza y sanea cadenas para transmisión por canal de radio.
+ */
+fun String.sanitizeRadioPayload(): String {
+    return this.trim()
+}
+
+infix fun String.matchesNode(nodeId: String): Boolean {
+    return this == nodeId
+}
+
+operator fun SessionToken.plus(other: SessionToken): SessionToken {
+    return SessionToken(this.raw + other.raw)
+}
+"#;
+
+        let symbols = parser.parse_content(code, "telemetry/Dispatcher.kt").unwrap();
+
+        assert_eq!(symbols.len(), 12);
+
+        // 1. typealias TelemetryCallback
+        assert_eq!(symbols[0].name, "TelemetryCallback");
+        assert_eq!(symbols[0].kind, SymbolKind::TypeAlias);
+        assert_eq!(
+            symbols[0].doc_comment.as_deref(),
+            Some("Alias de tipo para despacho reactivo de telemetría.")
+        );
+
+        // 2. value class SessionToken
+        assert_eq!(symbols[1].name, "SessionToken");
+        assert_eq!(symbols[1].kind, SymbolKind::Struct);
+        assert_eq!(
+            symbols[1].doc_comment.as_deref(),
+            Some("Identificador opaco de sesión nativa.")
+        );
+
+        // 3. sealed class OrbitalEvent
+        assert_eq!(symbols[2].name, "OrbitalEvent");
+        assert_eq!(symbols[2].kind, SymbolKind::Struct);
+
+        // 4. data class IgnitionStarted : OrbitalEvent
+        assert_eq!(symbols[3].name, "IgnitionStarted");
+        assert_eq!(symbols[3].kind, SymbolKind::Struct);
+
+        // 5. object ShutdownCompleted
+        assert_eq!(symbols[4].name, "ShutdownCompleted");
+        assert_eq!(symbols[4].kind, SymbolKind::Struct);
+
+        // 6. class TelemetryDispatcher
+        assert_eq!(symbols[5].name, "TelemetryDispatcher");
+        assert_eq!(symbols[5].kind, SymbolKind::Struct);
+
+        // 7. companion object Factory
+        assert_eq!(symbols[6].name, "Factory");
+        assert_eq!(symbols[6].kind, SymbolKind::Struct);
+
+        // 8. fun createDefault()
+        assert_eq!(symbols[7].name, "createDefault()");
+        assert_eq!(symbols[7].kind, SymbolKind::Function);
+
+        // 9. fun dispatch()
+        assert_eq!(symbols[8].name, "dispatch()");
+        assert_eq!(symbols[8].kind, SymbolKind::Function);
+
+        // 10. Extension function String.sanitizeRadioPayload()
+        assert_eq!(symbols[9].name, "String.sanitizeRadioPayload()");
+        assert_eq!(symbols[9].kind, SymbolKind::Function);
+        assert_eq!(
+            symbols[9].doc_comment.as_deref(),
+            Some("Normaliza y sanea cadenas para transmisión por canal de radio.")
+        );
+
+        // 11. Infix extension function String.matchesNode()
+        assert_eq!(symbols[10].name, "String.matchesNode()");
+        assert_eq!(symbols[10].kind, SymbolKind::Function);
+
+        // 12. Operator extension function SessionToken.plus()
+        assert_eq!(symbols[11].name, "SessionToken.plus()");
+        assert_eq!(symbols[11].kind, SymbolKind::Function);
     }
 }
